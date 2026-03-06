@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة الترتيب - Ordinal Numbers Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            direction: rtl;
+            text-align: right;
+        }
+
+        body {
+            font-family: 'Arial', 'Droid Arabic Kufi', sans-serif;
+            background: linear-gradient(135deg, #fff5e6 0%, #ffe8cc 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        .progress-text {
+            font-size: 18px;
+            color: #667bc6;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667bc6, #a78bfa);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        .instruction-area {
+            margin-bottom: 30px;
+        }
+
+        .instruction-text {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: bold;
+            line-height: 1.4;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .audio-button {
+            background: linear-gradient(135deg, #667bc6, #a78bfa);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 70px;
+            height: 70px;
+            font-size: 32px;
+            cursor: pointer;
+            margin: 0 auto;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(102, 123, 198, 0.3);
+        }
+
+        .audio-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(102, 123, 198, 0.5);
+        }
+
+        .audio-button:active {
+            transform: scale(0.95);
+        }
+
+        .objects-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 40px;
+            flex-direction: row-reverse;
+        }
+
+        .object-button {
+            flex: 1;
+            aspect-ratio: 1;
+            border: 3px solid #e0e0e0;
+            border-radius: 20px;
+            background: #f8f8f8;
+            font-size: 60px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            min-height: 80px;
+        }
+
+        .object-button:hover {
+            border-color: #667bc6;
+            background: #f0f4ff;
+            transform: scale(1.05);
+        }
+
+        .object-button.selected {
+            border-color: #667bc6;
+            background: #e8ecff;
+            transform: scale(1.1);
+        }
+
+        .object-button.correct {
+            animation: correctPulse 0.6s ease;
+            border-color: #10b981;
+            background: #d1fae5;
+        }
+
+        .object-button.incorrect {
+            animation: shake 0.4s ease;
+            border-color: #ef4444;
+            background: #fee2e2;
+        }
+
+        @keyframes correctPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .feedback-area {
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            min-height: 60px;
+            margin-bottom: 20px;
+        }
+
+        .feedback-text {
+            animation: fadeInOut 1s ease;
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        .confetti {
+            position: fixed;
+            pointer-events: none;
+            font-size: 30px;
+            animation: fall 2s ease-in forwards;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .buttons-area {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 20px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+            min-width: 150px;
+        }
+
+        .btn-next {
+            background: linear-gradient(135deg, #667bc6, #a78bfa);
+            color: white;
+            display: none;
+        }
+
+        .btn-next.show {
+            display: inline-block;
+        }
+
+        .btn-next:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 123, 198, 0.3);
+        }
+
+        .btn-replay {
+            background: #f3e8ff;
+            color: #667bc6;
+            border: 2px solid #667bc6;
+        }
+
+        .btn-replay:hover {
+            background: #e8dcff;
+        }
+
+        .end-screen {
+            display: none;
+            text-align: center;
+        }
+
+        .end-screen.show {
+            display: block;
+            animation: scaleIn 0.5s ease;
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .end-screen h2 {
+            font-size: 48px;
+            color: #667bc6;
+            margin-bottom: 20px;
+        }
+
+        .celebration {
+            font-size: 100px;
+            margin: 20px 0;
+            animation: bounce 1s ease infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .end-screen p {
+            font-size: 24px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .welcome-screen {
+            display: none;
+            text-align: center;
+            animation: scaleIn 0.5s ease;
+        }
+
+        .welcome-screen.show {
+            display: block;
+        }
+
+        .btn-restart {
+            background: linear-gradient(135deg, #10b981, #34d399);
+            color: white;
+            min-width: 200px;
+            font-size: 24px;
+        }
+
+        .btn-restart:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        @media (max-width: 600px) {
+            .game-container {
+                border-radius: 20px;
+                padding: 20px;
+            }
+
+            .instruction-text {
+                font-size: 24px;
+            }
+
+            .object-button {
+                font-size: 48px;
+                min-height: 70px;
+            }
+
+            .audio-button {
+                width: 60px;
+                height: 60px;
+                font-size: 28px;
+            }
+
+            .btn {
+                padding: 12px 24px;
+                font-size: 18px;
+                min-width: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="welcome-screen" id="welcomeScreen">
+            <div style="font-size: 80px; margin-bottom: 20px; animation: bounce 1s ease infinite;">👋</div>
+            <h1 style="font-size: 48px; color: #667bc6; margin-bottom: 20px;">لعبة الترتيب 🎮</h1>
+            <p style="font-size: 28px; color: #666; margin-bottom: 30px;">هل أنت مستعد لتعلم الترتيب؟</p>
+            <button class="btn btn-restart" onclick="startGame()" style="background: linear-gradient(135deg, #667bc6, #a78bfa); min-width: 200px; font-size: 24px;">ابدأ اللعبة 🚀</button>
+            <p style="font-size: 16px; color: #999; margin-top: 40px;">إعداد: آية أبو ربيع</p>
+        </div>
+
+        <div class="game-content" style="display: none;">
+            <div class="header">
+                <div class="progress-text" id="progressText">السؤال 1 من 15</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 6.67%"></div>
+                </div>
+            </div>
+
+            <div class="instruction-area">
+                <div class="instruction-text" id="instructionText">اضغط على الزر لسماع التعليمات</div>
+                <button class="audio-button" id="audioButton" onclick="playInstruction()">🔊</button>
+            </div>
+
+            <div class="objects-container" id="objectsContainer"></div>
+
+            <div class="feedback-area" id="feedbackArea"></div>
+
+            <div class="buttons-area">
+                <button class="btn btn-replay" onclick="playInstruction()">🔄 كرر التعليمات</button>
+                <button class="btn btn-next" id="nextButton" onclick="nextQuestion()">التالي →</button>
+            </div>
+        </div>
+
+        <div class="end-screen" id="endScreen">
+            <h2>مبروك! 🎉</h2>
+            <div class="celebration">⭐✨🎊</div>
+            <p>أنت تعلمت الترتيب بنجاح!</p>
+            <button class="btn btn-restart" onclick="restartGame()">ابدأ من جديد 🔄</button>
+            <p style="font-size: 16px; color: #999; margin-top: 40px;">إعداد: آية أبو ربيع</p>
+        </div>
+    </div>
+
+    <script>
+        // Game data
+        const gameData = [
+            {
+                instruction: "اضغط على الحيوان الأول",
+                objects: ['🦁', '🐘', '🦒', '🦓', '🐆'],
+                answer: 4 // RTL: rightmost is 1st (index 4)
+            },
+            {
+                instruction: "اضغط على الحيوان الأخير",
+                objects: ['🦁', '🐘', '🦒', '🦓', '🐆'],
+                answer: 0 // RTL: leftmost is last (index 0)
+            },
+            {
+                instruction: "أين الفاكهة الثانية؟",
+                objects: ['🍎', '🍊', '🍌', '🍇', '🍓'],
+                answer: 3 // RTL: 2nd from right
+            },
+            {
+                instruction: "اختر الكرة الثالثة",
+                objects: ['🔴', '🔵', '🟢', '🟡', '🟣'],
+                answer: 2 // RTL: 3rd from right
+            },
+            {
+                instruction: "اضغط على السيارة الأخيرة",
+                objects: ['🚗', '🚕', '🚙', '🚌', '🚎'],
+                answer: 0
+            },
+            {
+                instruction: "اضغط على اللعبة الأولى",
+                objects: ['🧸', '🎈', '🪀', '🎲', '🧩'],
+                answer: 4
+            },
+            {
+                instruction: "أين الكتاب الثاني؟",
+                objects: ['📚', '📖', '✏️', '📝', '🖊️'],
+                answer: 3
+            },
+            {
+                instruction: "اختر النجمة الرابعة",
+                objects: ['⭐', '⭐', '⭐', '⭐', '⭐'],
+                answer: 1
+            },
+            {
+                instruction: "اضغط على البالون الخامس",
+                objects: ['🎈', '🎈', '🎈', '🎈', '🎈'],
+                answer: 0
+            },
+            {
+                instruction: "أين الزهرة الأولى؟",
+                objects: ['🌹', '🌻', '🌷', '🌺', '💐'],
+                answer: 4
+            },
+            {
+                instruction: "اضغط على الطائرة الثالثة",
+                objects: ['✈️', '🚁', '🛩️', '🚀', '🛸'],
+                answer: 2
+            },
+            {
+                instruction: "اختر القطار الأخير",
+                objects: ['🚂', '🚃', '🚄', '🚅', '🚆'],
+                answer: 0
+            },
+            {
+                instruction: "أين البيتزا الثانية؟",
+                objects: ['🍕', '🍔', '🌭', '🍟', '🌮'],
+                answer: 3
+            },
+            {
+                instruction: "اضغط على الشمس الرابعة",
+                objects: ['☀️', '🌞', '🌝', '🌛', '🌜'],
+                answer: 1
+            },
+            {
+                instruction: "اختر الحلوى الأولى",
+                objects: ['🍰', '🎂', '🧁', '🍪', '🍩'],
+                answer: 4
+            }
+        ];
+
+        let currentLevel = 0;
+        let selectedIndex = -1;
+        let isAnswered = false;
+        let isAnimating = false;
+
+        function initGame() {
+            currentLevel = 0;
+            loadQuestion();
+        }
+
+        function startGame() {
+            document.getElementById('welcomeScreen').style.display = 'none';
+            document.querySelector('.game-content').style.display = 'block';
+            initGame();
+        }
+
+        function loadQuestion() {
+            selectedIndex = -1;
+            isAnswered = false;
+            isAnimating = false;
+            document.getElementById('nextButton').classList.remove('show');
+            document.getElementById('feedbackArea').innerHTML = '';
+
+            const level = gameData[currentLevel];
+            document.getElementById('instructionText').textContent = level.instruction;
+            document.getElementById('progressText').textContent = `السؤال ${currentLevel + 1} من 15`;
+            
+            const progressPercent = ((currentLevel + 1) / 15) * 100;
+            document.getElementById('progressFill').style.width = progressPercent + '%';
+
+            renderObjects(level.objects);
+            playInstruction();
+        }
+
+        function renderObjects(objects) {
+            const container = document.getElementById('objectsContainer');
+            container.innerHTML = '';
+            
+            objects.forEach((obj, index) => {
+                const button = document.createElement('button');
+                button.className = 'object-button';
+                button.textContent = obj;
+                button.onclick = () => selectObject(index);
+                container.appendChild(button);
+            });
+        }
+
+        function selectObject(index) {
+            if (isAnswered || isAnimating) return;
+            
+            isAnimating = true;
+            const level = gameData[currentLevel];
+            const buttons = document.querySelectorAll('.object-button');
+            
+            buttons[index].classList.add('selected');
+            
+            setTimeout(() => {
+                if (index === level.answer) {
+                    handleCorrect(buttons, index);
+                } else {
+                    handleIncorrect(buttons, index);
+                }
+                isAnimating = false;
+            }, 300);
+        }
+
+        function handleCorrect(buttons, index) {
+            isAnswered = true;
+            buttons[index].classList.remove('selected');
+            buttons[index].classList.add('correct');
+            
+            const feedback = ['أحسنت! 👏', 'رائع! 🌟', 'ممتاز! 🎉', 'برافو! ⭐'][Math.floor(Math.random() * 4)];
+            showFeedback(feedback, '#10b981');
+            
+            createConfetti();
+            
+            setTimeout(() => {
+                document.getElementById('nextButton').classList.add('show');
+            }, 500);
+        }
+
+        function handleIncorrect(buttons, index) {
+            buttons[index].classList.remove('selected');
+            buttons[index].classList.add('incorrect');
+            
+            showFeedback('حاول مرة أخرى 💪', '#ef4444');
+            
+            setTimeout(() => {
+                buttons[index].classList.remove('incorrect');
+                buttons[index].classList.remove('selected');
+            }, 400);
+        }
+
+        function showFeedback(text, color) {
+            const feedbackArea = document.getElementById('feedbackArea');
+            feedbackArea.innerHTML = `<div class="feedback-text" style="color: ${color}">${text}</div>`;
+        }
+
+        function createConfetti() {
+            const emojis = ['⭐', '✨', '🎉', '🎊', '👏', '💫'];
+            for (let i = 0; i < 12; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.top = '50%';
+                confetti.style.animationDelay = Math.random() * 0.3 + 's';
+                document.body.appendChild(confetti);
+                
+                setTimeout(() => confetti.remove(), 2000);
+            }
+        }
+
+        function playInstruction() {
+            const text = gameData[currentLevel].instruction;
+            
+            // Check if Web Speech API is available
+            const synth = window.speechSynthesis;
+            if (!synth) {
+                console.log('Speech synthesis not available');
+                return;
+            }
+            
+            try {
+                synth.cancel();
+                const utterance = new window.SpeechSynthesisUtterance(text);
+                utterance.lang = 'ar-SA';
+                utterance.rate = 0.9;
+                utterance.pitch = 1.2;
+                synth.speak(utterance);
+            } catch (e) {
+                console.log('Speech synthesis error:', e);
+            }
+        }
+
+        function nextQuestion() {
+            if (currentLevel < gameData.length - 1) {
+                currentLevel++;
+                loadQuestion();
+            } else {
+                showEndScreen();
+            }
+        }
+
+        function showEndScreen() {
+            document.querySelector('.game-content').style.display = 'none';
+            document.getElementById('endScreen').classList.add('show');
+        }
+
+        function restartGame() {
+            document.querySelector('.game-content').style.display = 'none';
+            document.getElementById('endScreen').classList.remove('show');
+            document.getElementById('welcomeScreen').style.display = 'block';
+        }
+
+        // Start with welcome screen
+        window.addEventListener('load', () => {
+            document.getElementById('welcomeScreen').style.display = 'block';
+        });
+    </script>
+</body>
+</html>
